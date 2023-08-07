@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -49,30 +51,34 @@ class AuthController extends Controller
     public function login(Request $request){
         if(Auth::attempt(['email'=> $request->email, 'password' => $request->password])){
             $user = Auth::user();
-            $success['token'] = $user->createToken('MyApp')->plainTextToken;
+            $token = $user->createToken('token')->plainTextToken;
+            
+            $cookie = cookie('jwt', $token, minutes:60*24);
             $success['name'] = $user->name;
             $success['userId'] = $user->id;
 
-            $response = [
+            return response([
                 'success' => true,
                 'data' => $success,
                 'message' => 'User Login Successfully'
-            ];
+            ])->withCookie($cookie);
 
-            return response()->json($response, 200);
         }else{
             $response = [
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Invalid Credentials'
 
             ];
-            return response()->json($response);
+            return response()->json($response,status: Response::HTTP_UNAUTHORIZED);
         }
     }
 
-    public function logout(Request $request){
-        Auth::guard('web')->logout();
+    public function logout(){
+        $cookie = Cookie::forget('jwt');
+        return response(['success' => true,'message' => 'Successfully logged out'])->withCookie($cookie);
+    }
 
-        return response()->json(['message' => 'Successfully logged out']);
+    public function user(){
+        return Auth::user();
     }
 }

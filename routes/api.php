@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\DropdownController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,8 +23,14 @@ use App\Http\Controllers\Api\PostController;
 
 
 Route::post('/user-registration', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
-Route::post('/create-post', [PostController::class, 'create']);
-// Route::middleware('auth:api')->group(function () {
-// });
+Route::post('/login', [AuthController::class, 'login'])->name('login');
+//Route::post('/logout', [AuthController::class, 'logout']);
+
+Route::group(['middleware' => 'api'],function ($router) {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/create-post', [PostController::class, 'create']);
+    Route::get('/country', [DropdownController::class, 'index']);
+    Route::get('/getStates/{id}', [DropdownController::class, 'getStates']);
+    Route::get('/getCities/{id}', [DropdownController::class, 'getCities']);
+});
